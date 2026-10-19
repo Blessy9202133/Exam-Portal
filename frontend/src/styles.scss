@@ -1,0 +1,87 @@
+/* Global Styles */
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: #1e293b;
+  background-color: #f8fafc;
+}
+
+.card {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-primary {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+  font-weight: 500;
+  &:hover {
+    background-color: #2563eb;
+    border-color: #2563eb;
+  }
+}
+
+.badge-easy {
+  background-color: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.badge-moderate {
+  background-color: #fef9c3;
+  color: #854d0e;
+  border: 1px solid #fef08a;
+}
+
+.badge-tough {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+/* Palette item states */
+.q-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.q-unanswered {
+  background-color: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+}
+
+.q-answered {
+  background-color: #22c55e;
+  color: #ffffff;
+  border: 1px solid #16a34a;
+}
+
+.q-review {
+  background-color: #eab308;
+  color: #ffffff;
+  border: 1px solid #ca8a04;
+}
+
+.q-active {
+  ring: 3px;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+}
+
+.timer-box {
+  background-color: #0f172a;
+  color: #38bdf8;
+  font-family: monospace;
+  font-size: 1.35rem;
+  font-weight: 700;
+  padding: 0.4rem 1rem;
+  border-radius: 8px;
+}
