@@ -853,7 +853,7 @@ import { AuthService } from '../../services/auth.service';
               <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ editUserErr }}
             </div>
 
-            <form (ngSubmit)="onSaveEditUser()" *ngIf="editingEmployee">
+            <form (ngSubmit)="onSaveEditUser()" *ngIf="editingEmployee" autocomplete="off">
               <div class="row g-3 mb-3">
                 <div class="col-md-6">
                   <label class="form-label fw-semibold small mb-1 text-muted">Employee ID (Fixed)</label>
@@ -862,17 +862,17 @@ import { AuthService } from '../../services/auth.service';
 
                 <div class="col-md-6">
                   <label class="form-label fw-semibold small mb-1 text-dark">Full Name *</label>
-                  <input type="text" class="form-control form-control-sm" [(ngModel)]="editingEmployee.name" name="editName" required />
+                  <input type="text" class="form-control form-control-sm" [(ngModel)]="editingEmployee.name" name="editName" required autocomplete="off" />
                 </div>
 
                 <div class="col-md-6">
                   <label class="form-label fw-semibold small mb-1 text-dark">Work Email *</label>
-                  <input type="email" class="form-control form-control-sm" [(ngModel)]="editingEmployee.email" name="editEmail" required />
+                  <input type="email" class="form-control form-control-sm" [(ngModel)]="editingEmployee.email" name="editEmail" required autocomplete="off" />
                 </div>
 
                 <div class="col-md-6">
                   <label class="form-label fw-semibold small mb-1 text-dark">Designation</label>
-                  <input type="text" class="form-control form-control-sm" placeholder="e.g. Senior Engineer" [(ngModel)]="editingEmployee.designation" name="editDesignation" />
+                  <input type="text" class="form-control form-control-sm" [(ngModel)]="editingEmployee.designation" name="editDesignation" autocomplete="off" />
                 </div>
 
                 <div class="col-md-6">
@@ -893,7 +893,7 @@ import { AuthService } from '../../services/auth.service';
 
                 <div class="col-md-6">
                   <label class="form-label fw-semibold small mb-1 text-dark">Mobile Phone</label>
-                  <input type="text" class="form-control form-control-sm" placeholder="e.g. 91-9876543210" [(ngModel)]="editingEmployee.mobilePhone" name="editPhone" />
+                  <input type="text" class="form-control form-control-sm" [(ngModel)]="editingEmployee.mobilePhone" name="editPhone" autocomplete="off" />
                 </div>
 
                 <div class="col-md-6">
@@ -906,8 +906,7 @@ import { AuthService } from '../../services/auth.service';
 
                 <div class="col-12">
                   <label class="form-label fw-semibold small mb-1 text-dark">Reset Password (Optional)</label>
-                  <input type="password" class="form-control form-control-sm" placeholder="Leave blank to keep existing password, or type new password to reset" [(ngModel)]="editingEmployee.newPassword" name="editPassword" />
-                  <small class="text-muted fs-7">Only fill this if you want to reset or assign a new password for this employee.</small>
+                  <input type="password" class="form-control form-control-sm" [(ngModel)]="editingEmployee.newPassword" name="editPassword" autocomplete="new-password" />
                 </div>
               </div>
 
@@ -947,26 +946,26 @@ import { AuthService } from '../../services/auth.service';
               <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ createUserErr }}
             </div>
 
-            <form (ngSubmit)="onCreateUser()">
+            <form (ngSubmit)="onCreateUser()" autocomplete="off">
               <div class="row g-3 mb-3">
                 <div class="col-md-6">
                   <label class="form-label fw-semibold small mb-1 text-dark">Employee ID *</label>
-                  <input type="text" class="form-control form-control-sm text-uppercase font-monospace fw-bold" placeholder="e.g. 53393 or EMP5001" [(ngModel)]="newEmployee.employeeId" name="regEmployeeId" required />
+                  <input type="text" class="form-control form-control-sm text-uppercase font-monospace fw-bold" [(ngModel)]="newEmployee.employeeId" name="regEmployeeId" required autocomplete="off" />
                 </div>
 
                 <div class="col-md-6">
                   <label class="form-label fw-semibold small mb-1 text-dark">Full Name *</label>
-                  <input type="text" class="form-control form-control-sm" placeholder="e.g. MR. JOHN DOE" [(ngModel)]="newEmployee.name" name="regName" required />
+                  <input type="text" class="form-control form-control-sm" [(ngModel)]="newEmployee.name" name="regName" required autocomplete="off" />
                 </div>
 
                 <div class="col-md-6">
                   <label class="form-label fw-semibold small mb-1 text-dark">Email Address *</label>
-                  <input type="email" class="form-control form-control-sm" placeholder="user@hbl.in" [(ngModel)]="newEmployee.email" name="regEmail" required />
+                  <input type="email" class="form-control form-control-sm" [(ngModel)]="newEmployee.email" name="regEmail" required autocomplete="off" />
                 </div>
 
                 <div class="col-md-6">
                   <label class="form-label fw-semibold small mb-1 text-dark">Designation</label>
-                  <input type="text" class="form-control form-control-sm" placeholder="e.g. ENGINEER" [(ngModel)]="newEmployee.designation" name="regDesignation" />
+                  <input type="text" class="form-control form-control-sm" [(ngModel)]="newEmployee.designation" name="regDesignation" autocomplete="off" />
                 </div>
 
                 <div class="col-md-6">
@@ -987,7 +986,7 @@ import { AuthService } from '../../services/auth.service';
 
                 <div class="col-md-6">
                   <label class="form-label fw-semibold small mb-1 text-dark">Mobile Phone</label>
-                  <input type="text" class="form-control form-control-sm" placeholder="e.g. 91-9876543210" [(ngModel)]="newEmployee.mobilePhone" name="regPhone" />
+                  <input type="text" class="form-control form-control-sm" [(ngModel)]="newEmployee.mobilePhone" name="regPhone" autocomplete="off" />
                 </div>
 
                 <div class="col-md-6">
@@ -1000,8 +999,7 @@ import { AuthService } from '../../services/auth.service';
 
                 <div class="col-12">
                   <label class="form-label fw-semibold small mb-1 text-dark">Password (Optional)</label>
-                  <input type="password" class="form-control form-control-sm" placeholder="Leave blank to use Employee ID as password" [(ngModel)]="newEmployee.password" name="regPassword" />
-                  <small class="text-muted fs-7">Default password is the Employee ID (username). You can also set a custom password.</small>
+                  <input type="password" class="form-control form-control-sm" [(ngModel)]="newEmployee.password" name="regPassword" autocomplete="new-password" />
                 </div>
               </div>
 
@@ -1180,7 +1178,7 @@ export class AdminDashboardComponent implements OnInit {
     level: 'L1',
     mobilePhone: '',
     role: 'EMPLOYEE',
-    password: '123456',
+    password: '',
   };
   isCreatingUser = false;
   createUserSuccess = '';
