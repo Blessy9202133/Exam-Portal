@@ -107,7 +107,7 @@ import { AuthService } from '../../services/auth.service';
 
         <!-- Bottom Copyright -->
         <div class="text-center text-muted small pt-3 border-top fs-7">
-          <span>© HBL Power Systems Ltd. • Assessment Portal</span>
+          <span>© HBL Engineering Ltd. • Assessment Portal</span>
         </div>
       </div>
     </div>
