@@ -34,7 +34,10 @@ export interface LoginResponse {
   providedIn: 'root',
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:5050/api/auth';
+  //private apiUrl = 'http://localhost:5050/api/auth';
+  //public apiUrl: string = (window as any).runtimeConfig?.apiUrl || 'http://localhost:5050/api/auth';
+  public apiUrl: string = `${(window as any).runtimeConfig?.apiUrl || '/api'}/auth`;
+  
   private currentEmployeeSubject = new BehaviorSubject<Employee | null>(this.getStoredEmployee());
   public currentEmployee$ = this.currentEmployeeSubject.asObservable();
 
