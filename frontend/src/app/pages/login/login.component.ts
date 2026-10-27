@@ -11,13 +11,12 @@ import { AuthService } from '../../services/auth.service';
   template: `
     <div class="login-layout">
       <!-- Left Hero Column with Background Image & Branding -->
-      <div class="login-hero d-none d-lg-flex flex-column justify-content-between p-5 text-white">
+      <div class="login-hero d-none d-lg-flex flex-column justify-content-between p-5 text-white" style="background-image: linear-gradient(135deg, rgba(15, 23, 42, 0.72) 0%, rgba(30, 58, 138, 0.82) 100%), url('login-bg.jpg');">
         <!-- Top Logo & Brand -->
         <div class="d-flex align-items-center gap-3">
           <img src="hbl_logo.jpg" alt="HBL Logo" class="bg-white p-2 rounded-3 shadow-sm" style="max-height: 48px;" />
           <div>
             <h5 class="fw-bold mb-0 text-white tracking-wide">HBL ASSESSMENT PORTAL</h5>
-            <small class="text-white-50">Enterprise Examination System</small>
           </div>
         </div>
 
@@ -122,8 +121,10 @@ import { AuthService } from '../../services/auth.service';
     }
     .login-hero {
       flex: 1;
-      background: linear-gradient(135deg, rgba(15, 23, 42, 0.72) 0%, rgba(30, 58, 138, 0.82) 100%),
-                  url('/login-bg.jpg') center center / cover no-repeat;
+      background-color: #1e3a8a;
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
       position: relative;
     }
     .login-panel {
