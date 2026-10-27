@@ -7,8 +7,7 @@ import { AuthService } from './auth.service';
   providedIn: 'root',
 })
 export class AdminService {
-  //private apiUrl = 'http://localhost:5050/api/admin';
-  //public apiUrl: string = (window as any).runtimeConfig?.apiUrl || 'http://localhost:5050/api/admin';
+  
   public apiUrl: string = `${(window as any).runtimeConfig?.apiUrl || '/api'}/admin`;
 
   constructor(private http: HttpClient, private authService: AuthService) {}

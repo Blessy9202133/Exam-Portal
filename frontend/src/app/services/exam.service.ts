@@ -54,8 +54,7 @@ export interface ExamResultResponse {
   providedIn: 'root',
 })
 export class ExamService {
-  //private apiUrl = '${config.apiBaseUrl}/api/exam';
-  //public apiUrl: string = (window as any).runtimeConfig?.apiUrl || 'http://localhost:5050/api/admin';
+  
   public apiUrl: string = `${(window as any).runtimeConfig?.apiUrl || '/api'}/admin`;
 
   constructor(private http: HttpClient, private authService: AuthService) {}
