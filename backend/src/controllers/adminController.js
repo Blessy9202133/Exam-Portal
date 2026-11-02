@@ -11,10 +11,12 @@ const {
 } = require('../utils/templateGenerator');
 const bcrypt = require('bcryptjs');
 
-// Get all exam attempts across employees
+// Get all exam attempts across employees (scoped to department for HOD / Super Admin)
 const getAllAttempts = async (req, res) => {
   try {
-    const attempts = await ExamAttempt.find()
+    const isHod = req.user?.role === 'SUPER_ADMIN' || req.user?.role === 'HOD';
+    const filter = isHod && req.user?.department ? { department: req.user.department } : {};
+    const attempts = await ExamAttempt.find(filter)
       .select('-answers')
       .sort({ completedAt: -1 });
     res.json(attempts);
@@ -23,9 +25,12 @@ const getAllAttempts = async (req, res) => {
   }
 };
 
-// Get stats summary for Admin Dashboard
+// Get stats summary for Admin Dashboard (dynamically scoped to HOD department if applicable)
 const getStats = async (req, res) => {
   try {
+    const isHod = req.user?.role === 'SUPER_ADMIN' || req.user?.role === 'HOD';
+    const hodDept = req.user?.department;
+
     const OFFICIAL_DEPARTMENTS = [
       'ENGINEERING',
       'I&C',
@@ -39,15 +44,24 @@ const getStats = async (req, res) => {
       'SERVICE',
     ];
 
-    const empDepts = await Employee.distinct('department');
-    const qDepts = await Question.distinct('department');
-    const combined = [...new Set([...OFFICIAL_DEPARTMENTS, ...empDepts, ...qDepts])];
-    const departments = combined.filter(d => OFFICIAL_DEPARTMENTS.includes(d)).sort();
+    let departments = [];
+    if (isHod && hodDept) {
+      departments = [hodDept];
+    } else {
+      const empDepts = await Employee.distinct('department');
+      const qDepts = await Question.distinct('department');
+      const combined = [...new Set([...OFFICIAL_DEPARTMENTS, ...empDepts, ...qDepts])];
+      departments = combined.filter(d => OFFICIAL_DEPARTMENTS.includes(d)).sort();
+    }
+
+    const empFilter = isHod && hodDept ? { role: 'EMPLOYEE', department: hodDept } : { role: 'EMPLOYEE' };
+    const qFilter = isHod && hodDept ? { department: hodDept } : {};
+    const attemptFilter = isHod && hodDept ? { department: hodDept } : {};
 
     const [totalEmployees, totalQuestions, totalAttempts] = await Promise.all([
-      Employee.countDocuments({ role: 'EMPLOYEE' }),
-      Question.countDocuments(),
-      ExamAttempt.countDocuments(),
+      Employee.countDocuments(empFilter),
+      Question.countDocuments(qFilter),
+      ExamAttempt.countDocuments(attemptFilter),
     ]);
 
     // Aggregate uploaded question statistics per department
@@ -66,7 +80,7 @@ const getStats = async (req, res) => {
       })
     );
 
-    const recentAttempts = await ExamAttempt.find()
+    const recentAttempts = await ExamAttempt.find(attemptFilter)
       .select('employeeName department level score percentage status completedAt')
       .sort({ completedAt: -1 })
       .limit(10);
@@ -77,6 +91,8 @@ const getStats = async (req, res) => {
       totalAttempts,
       deptStats,
       recentAttempts,
+      isHod,
+      hodDepartment: isHod ? hodDept : null,
     });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching stats' });
@@ -120,7 +136,11 @@ const uploadQuestionsFile = async (req, res) => {
       return res.status(400).json({ message: 'No template file (.docx or .xlsx) provided' });
     }
 
-    const targetDepartment = req.body.department || 'I&C';
+    const isHod = req.user?.role === 'SUPER_ADMIN' || req.user?.role === 'HOD';
+    let targetDepartment = req.body.department || 'I&C';
+    if (isHod && req.user?.department) {
+      targetDepartment = req.user.department;
+    }
     const mode = req.body.mode || 'REPLACE';
     const fileName = req.file.originalname.toLowerCase();
     let parsedQuestions = [];
@@ -380,13 +400,16 @@ const uploadEmployeeExcel = async (req, res) => {
   }
 };
 
-// Get Exam Access Directory for Admin
+// Get Exam Access Directory for Admin (scoped to HOD department if applicable)
 const getExamAccessList = async (req, res) => {
   try {
+    const isHod = req.user?.role === 'SUPER_ADMIN' || req.user?.role === 'HOD';
     const { department, status, search } = req.query;
     let query = { role: 'EMPLOYEE' };
 
-    if (department && department.trim()) {
+    if (isHod && req.user?.department) {
+      query.department = req.user.department;
+    } else if (department && department.trim()) {
       query.department = department.trim();
     }
 
@@ -413,6 +436,8 @@ const getExamAccessList = async (req, res) => {
         linkGeneratedAt: null,
         lastAttemptAt: null,
         adminRemark: '',
+        reattemptReason: '',
+        lastReattemptGrantedAt: null,
       };
 
       let computedStatus = access.status || 'NOT_ASSIGNED';
@@ -449,6 +474,8 @@ const getExamAccessList = async (req, res) => {
           linkGeneratedAt: access.linkGeneratedAt || null,
           lastAttemptAt: access.lastAttemptAt || null,
           adminRemark: access.adminRemark || '',
+          reattemptReason: access.reattemptReason || '',
+          lastReattemptGrantedAt: access.lastReattemptGrantedAt || null,
         },
       };
     });
@@ -487,10 +514,16 @@ const enableExamLinks = async (req, res) => {
     }
 
     const crypto = require('crypto');
-    const employees = await Employee.find(buildEmployeeIdQuery(employeeIds));
+    const isHod = req.user?.role === 'SUPER_ADMIN' || req.user?.role === 'HOD';
+    let query = buildEmployeeIdQuery(employeeIds);
+    if (isHod && req.user?.department) {
+      query.department = req.user.department;
+    }
+
+    const employees = await Employee.find(query);
 
     if (employees.length === 0) {
-      return res.status(404).json({ message: 'No matching employee accounts found.' });
+      return res.status(404).json({ message: 'No matching employee accounts found in your department.' });
     }
 
     let updatedCount = 0;
@@ -514,7 +547,7 @@ const enableExamLinks = async (req, res) => {
     }
 
     res.json({
-      message: `Exam link successfully enabled for ${updatedCount} employee(s)! Each employee can now log in and take 1 attempt.`,
+      message: `Exam access successfully enabled for ${updatedCount} employee(s)! Each employee can now log in and take their assessment.`,
       updatedCount,
     });
   } catch (error) {
@@ -523,20 +556,31 @@ const enableExamLinks = async (req, res) => {
   }
 };
 
-// Grant Permission for One More Attempt (Re-attempt)
+// Grant Permission for One More Attempt (Re-attempt) - REQUIRES COMMENT
 const grantReattempt = async (req, res) => {
   try {
-    const { employeeId, employeeIds, remark } = req.body;
-    const targetIds = employeeIds || (employeeId ? [employeeId] : []);
+    const { employeeId, employeeIds, remark, comment } = req.body;
+    const reasonText = (comment || remark || '').trim();
 
+    if (!reasonText) {
+      return res.status(400).json({ message: 'A comment / reason is mandatory to grant an exam re-attempt.' });
+    }
+
+    const targetIds = employeeIds || (employeeId ? [employeeId] : []);
     if (targetIds.length === 0) {
       return res.status(400).json({ message: 'Please specify an employee to grant re-attempt permission.' });
     }
 
-    const employees = await Employee.find(buildEmployeeIdQuery(targetIds));
+    const isHod = req.user?.role === 'SUPER_ADMIN' || req.user?.role === 'HOD';
+    let query = buildEmployeeIdQuery(targetIds);
+    if (isHod && req.user?.department) {
+      query.department = req.user.department;
+    }
+
+    const employees = await Employee.find(query);
 
     if (employees.length === 0) {
-      return res.status(404).json({ message: 'No matching employee accounts found.' });
+      return res.status(404).json({ message: 'No matching employee accounts found in your department.' });
     }
 
     let updatedCount = 0;
@@ -549,14 +593,17 @@ const grantReattempt = async (req, res) => {
       emp.examAccess.attemptsAllowed = Math.max(currentAllowed, currentUsed) + 1;
       emp.examAccess.isLinkActive = true;
       emp.examAccess.status = 'LINK_ACTIVE';
-      emp.examAccess.adminRemark = remark || `Re-attempt permission granted by Admin on ${new Date().toLocaleDateString()}`;
+      emp.examAccess.adminRemark = reasonText;
+      emp.examAccess.reattemptReason = reasonText;
+      emp.examAccess.lastReattemptGrantedAt = new Date();
       await emp.save();
       updatedCount++;
     }
 
     res.json({
-      message: `Permission granted! ${updatedCount} employee(s) can now log in for 1 more exam attempt.`,
+      message: `Re-attempt authorized for ${updatedCount} employee(s). Reason: "${reasonText}"`,
       updatedCount,
+      reason: reasonText,
     });
   } catch (error) {
     console.error('Error granting re-attempt:', error);
@@ -574,7 +621,13 @@ const revokeExamLink = async (req, res) => {
       return res.status(400).json({ message: 'Please specify an employee to revoke access.' });
     }
 
-    const employees = await Employee.find(buildEmployeeIdQuery(targetIds));
+    const isHod = req.user?.role === 'SUPER_ADMIN' || req.user?.role === 'HOD';
+    let query = buildEmployeeIdQuery(targetIds);
+    if (isHod && req.user?.department) {
+      query.department = req.user.department;
+    }
+
+    const employees = await Employee.find(query);
 
     let revokedCount = 0;
     for (const emp of employees) {

@@ -40,7 +40,7 @@ import { AuthService, Employee } from '../../services/auth.service';
                 <i class="bi bi-journal-check me-1"></i> My Score History
               </a>
             </li>
-            <li class="nav-item" *ngIf="currentEmployee.role === 'ADMIN'">
+            <li class="nav-item" *ngIf="currentEmployee.role === 'ADMIN' || currentEmployee.role === 'SUPER_ADMIN' || currentEmployee.role === 'HOD'">
               <a class="nav-link" routerLink="/admin" routerLinkActive="active">
                 <i class="bi bi-speedometer2 me-1"></i> Admin Panel
               </a>
@@ -53,7 +53,9 @@ import { AuthService, Employee } from '../../services/auth.service';
               <small class="text-muted small">
                 {{ currentEmployee.employeeId }} |
                 <span class="badge bg-primary ms-1">{{ currentEmployee.department }}</span>
-                <span class="badge bg-info text-dark ms-1">{{ currentEmployee.level }}</span>
+                <span class="badge bg-info text-dark ms-1" *ngIf="currentEmployee.level">{{ currentEmployee.level }}</span>
+                <span class="badge bg-warning text-dark ms-1" *ngIf="currentEmployee.role === 'SUPER_ADMIN' || currentEmployee.role === 'HOD'">HOD</span>
+                <span class="badge bg-danger text-white ms-1" *ngIf="currentEmployee.role === 'ADMIN'">ADMIN</span>
               </small>
             </div>
             <button class="btn btn-outline-light btn-sm ms-2" (click)="logout()">

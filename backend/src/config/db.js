@@ -24,6 +24,24 @@ const seedAdminUser = async () => {
       await admin.save();
       console.log('✅ Account 123456 role confirmed as ADMIN.');
     }
+
+    // Seed sample Department HOD (SUPER_ADMIN) for I&C department if not exists
+    const hod = await Employee.findOne({ employeeId: 'HOD101' });
+    if (!hod) {
+      const hashedPassword = await bcrypt.hash('HOD101', 10);
+      await Employee.create({
+        employeeId: 'HOD101',
+        name: 'I&C Department HOD',
+        email: 'hod.ic@examportal.com',
+        password: hashedPassword,
+        department: 'I&C',
+        level: 'L3',
+        role: 'SUPER_ADMIN',
+        designation: 'Head of Department (I&C)',
+        mobilePhone: ''
+      });
+      console.log('✅ Default Department HOD (HOD101 / HOD101) initialized in database.');
+    }
   } catch (err) {
     console.error('Error auto-seeding admin user:', err.message);
   }

@@ -19,13 +19,13 @@ const {
   grantReattempt,
   revokeExamLink,
 } = require('../controllers/adminController');
-const { verifyToken, requireRole } = require('../middleware/auth');
+const { verifyToken, requireRole, requireAnyRole } = require('../middleware/auth');
 
 // Configure multer memory storage for file uploads
 const upload = multer({ storage: multer.memoryStorage() });
 
 router.use(verifyToken);
-router.use(requireRole('ADMIN'));
+router.use(requireAnyRole('ADMIN', 'SUPER_ADMIN', 'HOD'));
 
 router.get('/stats', getStats);
 router.get('/attempts', getAllAttempts);
@@ -39,13 +39,13 @@ router.get('/export-questions', exportQuestionsData);
 router.post('/upload-template', upload.single('file'), uploadQuestionsFile);
 router.post('/upload-word', upload.single('file'), uploadQuestionsFile);
 
-// Employee Profile & User Management Routes
-router.get('/employees', getEmployees);
-router.post('/employees', createEmployee);
-router.put('/employees/:id', updateEmployee);
-router.delete('/employees/:id', deleteEmployee);
-router.get('/employees/template', getEmployeeExcelTemplate);
-router.post('/employees/bulk-upload', upload.single('file'), uploadEmployeeExcel);
+// Employee Profile & User Management Routes (Restricted strictly to Master ADMIN)
+router.get('/employees', requireRole('ADMIN'), getEmployees);
+router.post('/employees', requireRole('ADMIN'), createEmployee);
+router.put('/employees/:id', requireRole('ADMIN'), updateEmployee);
+router.delete('/employees/:id', requireRole('ADMIN'), deleteEmployee);
+router.get('/employees/template', requireRole('ADMIN'), getEmployeeExcelTemplate);
+router.post('/employees/bulk-upload', requireRole('ADMIN'), upload.single('file'), uploadEmployeeExcel);
 
 // Exam Link & Attempt Access Control Routes
 router.get('/exam-access', getExamAccessList);

@@ -26,4 +26,13 @@ const requireRole = (role) => {
   };
 };
 
-module.exports = { verifyToken, requireRole, JWT_SECRET };
+const requireAnyRole = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user?.role)) {
+      return res.status(403).json({ message: 'Forbidden. Insufficient permissions.' });
+    }
+    next();
+  };
+};
+
+module.exports = { verifyToken, requireRole, requireAnyRole, JWT_SECRET };

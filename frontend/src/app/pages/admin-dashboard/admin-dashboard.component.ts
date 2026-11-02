@@ -14,8 +14,17 @@ import { AuthService } from '../../services/auth.service';
       <!-- Admin Header -->
       <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-3">
         <div>
-          <h4 class="fw-bold text-dark mb-1"><i class="bi bi-speedometer2 me-2 text-primary"></i> Admin Control Center</h4>
-          <p class="text-muted small mb-0">Manage department templates, employee registration, and assessment results.</p>
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <h4 class="fw-bold text-dark mb-0">
+              <i class="bi bi-speedometer2 me-2 text-primary" *ngIf="isFullAdmin"></i>
+              <i class="bi bi-shield-shaded me-2 text-primary" *ngIf="isSuperAdminOrHod"></i>
+              {{ isSuperAdminOrHod ? (hodDepartment + ' Department HOD Portal') : 'Admin Control Center' }}
+            </h4>
+            <span class="badge bg-warning text-dark px-2.5 py-1" *ngIf="isSuperAdminOrHod">HOD ACCESS</span>
+            <span class="badge bg-primary px-2.5 py-1" *ngIf="isFullAdmin">MASTER ADMIN</span>
+          </div>
+          <p class="text-muted small mb-0" *ngIf="isFullAdmin">Manage department templates, employee registration, and assessment results.</p>
+          <p class="text-muted small mb-0" *ngIf="isSuperAdminOrHod">Manage {{ hodDepartment }} department question bank, employee exam link authorization, and re-attempt permissions.</p>
         </div>
         <button class="btn btn-outline-secondary btn-sm rounded-3 shadow-xs" (click)="refreshDashboardData()">
           <i class="bi bi-arrow-clockwise me-1"></i> Refresh Data
@@ -28,7 +37,9 @@ import { AuthService } from '../../services/auth.service';
           <div class="card border-0 shadow-xs rounded-4 p-3 bg-primary text-white">
             <div class="d-flex justify-content-between align-items-center">
               <div>
-                <small class="text-white-50 text-uppercase fw-bold fs-7">Registered Employees</small>
+                <small class="text-white-50 text-uppercase fw-bold fs-7">
+                  {{ isSuperAdminOrHod ? (hodDepartment + ' Employees') : 'Registered Employees' }}
+                </small>
                 <h3 class="fw-bold mt-1 mb-0 font-monospace">
                   <span *ngIf="isDataLoading" class="spinner-border spinner-border-sm me-2"></span>
                   {{ stats?.totalEmployees || 0 }}
@@ -43,7 +54,9 @@ import { AuthService } from '../../services/auth.service';
           <div class="card border-0 shadow-xs rounded-4 p-3 bg-dark text-white">
             <div class="d-flex justify-content-between align-items-center">
               <div>
-                <small class="text-white-50 text-uppercase fw-bold fs-7">Question Bank Size</small>
+                <small class="text-white-50 text-uppercase fw-bold fs-7">
+                  {{ isSuperAdminOrHod ? (hodDepartment + ' Question Bank') : 'Question Bank Size' }}
+                </small>
                 <h3 class="fw-bold text-warning mt-1 mb-0 font-monospace">
                   <span *ngIf="isDataLoading" class="spinner-border spinner-border-sm me-2"></span>
                   {{ stats?.totalQuestions || 0 }} <span class="fs-6 text-white-50 fw-normal">Questions</span>
@@ -77,7 +90,8 @@ import { AuthService } from '../../services/auth.service';
             <i class="bi bi-file-earmark-arrow-up-fill me-1"></i> Department Question Files
           </button>
         </li>
-        <li class="nav-item">
+        <!-- User Profiles & Registration: Strictly for Master Admin -->
+        <li class="nav-item" *ngIf="isFullAdmin">
           <button class="nav-link fw-semibold px-3 py-2" [class.active]="activeTab === 'user-management'" (click)="activeTab = 'user-management'">
             <i class="bi bi-people-fill me-1"></i> User Profiles & Registration
           </button>
@@ -98,12 +112,16 @@ import { AuthService } from '../../services/auth.service';
       <div *ngIf="activeTab === 'template-upload'">
         <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 gap-2">
           <div>
-            <h6 class="fw-bold text-dark mb-0"><i class="bi bi-building me-2 text-primary"></i> Department Question Management</h6>
-            <small class="text-muted">Showing {{ filteredDeptStats.length }} of {{ stats?.deptStats?.length || 0 }} Excel & Database Departments</small>
+            <h6 class="fw-bold text-dark mb-0">
+              <i class="bi bi-building me-2 text-primary"></i>
+              {{ isSuperAdminOrHod ? (hodDepartment + ' Department Question Management') : 'Department Question Management' }}
+            </h6>
+            <small class="text-muted" *ngIf="isFullAdmin">Showing {{ filteredDeptStats.length }} of {{ stats?.deptStats?.length || 0 }} Excel & Database Departments</small>
+            <small class="text-muted" *ngIf="isSuperAdminOrHod">Dedicated question bank upload and management card for {{ hodDepartment }} department</small>
           </div>
 
-          <!-- Search & Filter Controls -->
-          <div class="d-flex flex-wrap align-items-center gap-2">
+          <!-- Search & Filter Controls: Only shown for Full Admin -->
+          <div class="d-flex flex-wrap align-items-center gap-2" *ngIf="isFullAdmin">
             <div class="input-group input-group-sm" style="width: 260px;">
               <span class="input-group-text bg-white text-muted"><i class="bi bi-search"></i></span>
               <input 
@@ -201,8 +219,8 @@ import { AuthService } from '../../services/auth.service';
         </div>
       </div>
 
-      <!-- TAB 2: User Profiles & Registration (Full Width & Clean) -->
-      <div *ngIf="activeTab === 'user-management'">
+      <!-- TAB 2: User Profiles & Registration (Full Width & Clean - Master Admin Only) -->
+      <div *ngIf="activeTab === 'user-management' && isFullAdmin">
         <!-- Top Action & Info Header Card -->
         <div class="card border-0 shadow-xs rounded-4 mb-4 bg-white border-start border-4 border-primary">
           <div class="card-body p-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
@@ -491,7 +509,7 @@ import { AuthService } from '../../services/auth.service';
                 Exam Link Distribution & Single-Attempt Access Policy
               </h6>
               <small class="text-muted">
-                Select users below and click <strong>"Send / Enable Exam Link"</strong> to grant 1 attempt. If an employee faces an issue or fails to attempt, click <strong>"Grant Re-attempt (+1)"</strong>.
+                Select users below and click <strong>"Enable"</strong> to grant 1 attempt. If an employee faces an issue or fails to attempt, click <strong>"Grant Re-attempt (+1)"</strong>.
               </small>
             </div>
 
@@ -502,14 +520,14 @@ import { AuthService } from '../../services/auth.service';
                 [disabled]="selectedEmpIds.size === 0 || isExamAccessAction"
                 (click)="enableSelectedExamLinks()"
               >
-                <i class="bi bi-send-check-fill"></i>
-                <span>Send / Enable Link ({{ selectedEmpIds.size }})</span>
+                <i class="bi bi-unlock-fill"></i>
+                <span>Enable ({{ selectedEmpIds.size }})</span>
               </button>
 
               <button
                 class="btn btn-warning btn-sm fw-bold text-dark shadow-xs d-flex align-items-center gap-1"
                 [disabled]="selectedEmpIds.size === 0 || isExamAccessAction"
-                (click)="grantReattemptForSelected()"
+                (click)="openBulkGrantReattemptModal()"
               >
                 <i class="bi bi-arrow-repeat"></i>
                 <span>Grant Re-attempt (+1) ({{ selectedEmpIds.size }})</span>
@@ -546,15 +564,19 @@ import { AuthService } from '../../services/auth.service';
                 </button>
               </div>
 
-              <select class="form-select form-select-sm" [(ngModel)]="examAccessDeptFilter" style="width: 180px;">
+              <!-- Department Filter: Full Admin sees all; HOD sees their department badge -->
+              <select class="form-select form-select-sm" [(ngModel)]="examAccessDeptFilter" style="width: 180px;" *ngIf="isFullAdmin">
                 <option value="">All Departments</option>
                 <option *ngFor="let d of stats?.deptStats" [value]="d.department">{{ d.department }}</option>
               </select>
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1.5 fw-bold" *ngIf="isSuperAdminOrHod">
+                <i class="bi bi-building me-1"></i>{{ hodDepartment }} Department
+              </span>
 
               <select class="form-select form-select-sm" [(ngModel)]="examAccessStatusFilter" style="width: 170px;">
                 <option value="ALL">All Statuses</option>
                 <option value="LINK_ACTIVE">Link Active (1 Attempt)</option>
-                <option value="NOT_ASSIGNED">Not Sent / Inactive</option>
+                <option value="NOT_ASSIGNED">Disabled / Inactive</option>
                 <option value="IN_PROGRESS">In-Progress</option>
                 <option value="LOCKED">Attempt Used / Locked</option>
                 <option value="COMPLETED">Completed</option>
@@ -580,12 +602,11 @@ import { AuthService } from '../../services/auth.service';
                         (change)="toggleSelectAllExam($event)"
                       />
                     </th>
-                    <th>Employee ID</th>
+                    <th style="min-width: 130px;">Employee ID</th>
                     <th>Name & Designation</th>
                     <th>Department & Level</th>
                     <th>Link Status</th>
                     <th>Attempts (Used / Max)</th>
-                    <th>Direct Exam Link</th>
                     <th class="pe-3 text-end">Action</th>
                   </tr>
                 </thead>
@@ -599,14 +620,17 @@ import { AuthService } from '../../services/auth.service';
                         (change)="toggleSelectEmp(emp.employeeId)"
                       />
                     </td>
-                    <td><code>{{ emp.employeeId }}</code></td>
+                    <!-- INCREASED FONT SIZE AND BOLD FOR EMPLOYEE ID -->
                     <td>
-                      <div class="fw-bold">{{ emp.name }}</div>
+                      <span class="fw-bold font-monospace text-dark fs-6" style="letter-spacing: 0.5px;">{{ emp.employeeId }}</span>
+                    </td>
+                    <td>
+                      <div class="fw-bold fs-6 text-dark">{{ emp.name }}</div>
                       <small class="text-muted fs-7">{{ emp.designation || emp.email }}</small>
                     </td>
                     <td>
                       <span class="badge bg-primary-subtle text-primary border border-primary-subtle">{{ emp.department }}</span>
-                      <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle ms-1">{{ emp.level }}</span>
+                      <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle ms-1" *ngIf="emp.level">{{ emp.level }}</span>
                     </td>
                     <td>
                       <span *ngIf="emp.examAccess?.computedStatus === 'LINK_ACTIVE'" class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1 fw-bold">
@@ -622,42 +646,38 @@ import { AuthService } from '../../services/auth.service';
                         <i class="bi bi-check2-all me-1"></i> COMPLETED
                       </span>
                       <span *ngIf="emp.examAccess?.computedStatus === 'NOT_ASSIGNED'" class="badge bg-secondary-subtle text-secondary px-2.5 py-1 fw-bold">
-                        <i class="bi bi-dash-circle me-1"></i> NOT SENT
+                        <i class="bi bi-dash-circle me-1"></i> DISABLED
                       </span>
                     </td>
                     <td>
-                      <span class="font-monospace fw-bold fs-7" [ngClass]="emp.examAccess?.attemptsUsed >= emp.examAccess?.attemptsAllowed && emp.examAccess?.attemptsAllowed > 0 ? 'text-danger' : 'text-dark'">
-                        {{ emp.examAccess?.attemptsUsed || 0 }} / {{ emp.examAccess?.attemptsAllowed || 0 }}
-                      </span>
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        class="btn btn-outline-secondary btn-sm py-1 px-2 font-monospace fs-7 d-flex align-items-center gap-1 shadow-xs"
-                        (click)="copyDirectExamLink(emp)"
-                        title="Copy direct exam login link"
-                      >
-                        <i class="bi" [ngClass]="copiedEmpId === emp.employeeId ? 'bi-check-lg text-success' : 'bi-link-45deg'"></i>
-                        <span>{{ copiedEmpId === emp.employeeId ? 'Copied Link!' : 'Copy Link' }}</span>
-                      </button>
+                      <div>
+                        <span class="font-monospace fw-bold fs-7" [ngClass]="emp.examAccess?.attemptsUsed >= emp.examAccess?.attemptsAllowed && emp.examAccess?.attemptsAllowed > 0 ? 'text-danger' : 'text-dark'">
+                          {{ emp.examAccess?.attemptsUsed || 0 }} / {{ emp.examAccess?.attemptsAllowed || 0 }}
+                        </span>
+                      </div>
+                      <!-- Display reason if re-attempt was authorized with comment -->
+                      <div *ngIf="emp.examAccess?.reattemptReason" class="mt-1 small text-muted" style="font-size: 0.73rem; max-width: 220px;" [title]="'Re-attempt Reason: ' + emp.examAccess?.reattemptReason">
+                        <i class="bi bi-chat-quote-fill text-warning me-1"></i>
+                        <span class="fst-italic text-truncate d-inline-block align-bottom" style="max-width: 190px;">{{ emp.examAccess?.reattemptReason }}</span>
+                      </div>
                     </td>
                     <td class="pe-3 text-end">
                       <div class="d-inline-flex gap-1">
-                        <!-- Send / Enable Link button (when link inactive) -->
+                        <!-- Enable button (when link inactive) -->
                         <button
                           class="btn btn-success btn-sm px-2.5 py-1 fw-bold shadow-xs"
                           *ngIf="!emp.examAccess?.isLinkActive"
                           (click)="enableExamLinkSingle(emp)"
                           title="Enable exam link for 1 attempt"
                         >
-                          <i class="bi bi-send-fill me-1"></i> Send Link
+                          <i class="bi bi-unlock-fill me-1"></i> Enable
                         </button>
 
-                        <!-- Grant Re-attempt (+1) button (when attempt used or locked) -->
+                        <!-- Grant Re-attempt (+1) button (opens comment modal) -->
                         <button
                           class="btn btn-warning btn-sm text-dark px-2.5 py-1 fw-bold shadow-xs"
-                          (click)="grantReattemptSingle(emp)"
-                          title="Grant permission for 1 more attempt"
+                          (click)="openGrantReattemptModal(emp)"
+                          title="Grant permission for 1 more attempt (comment required)"
                         >
                           <i class="bi bi-arrow-repeat me-1"></i> Grant Re-attempt (+1)
                         </button>
@@ -675,7 +695,7 @@ import { AuthService } from '../../services/auth.service';
                     </td>
                   </tr>
                   <tr *ngIf="filteredExamAccessList.length === 0">
-                    <td colspan="8" class="text-center py-5 text-muted">
+                    <td colspan="7" class="text-center py-5 text-muted">
                       <i class="bi bi-search fs-2 d-block mb-2"></i>
                       No employees match the selected criteria.
                     </td>
@@ -900,7 +920,8 @@ import { AuthService } from '../../services/auth.service';
                   <label class="form-label fw-semibold small mb-1 text-dark">System Role</label>
                   <select class="form-select form-select-sm" [(ngModel)]="editingEmployee.role" name="editRole" required>
                     <option value="EMPLOYEE">EMPLOYEE</option>
-                    <option value="ADMIN">ADMIN</option>
+                    <option value="SUPER_ADMIN">SUPER ADMIN (Department HOD)</option>
+                    <option value="ADMIN">ADMIN (Master Administrator)</option>
                   </select>
                 </div>
 
@@ -993,7 +1014,8 @@ import { AuthService } from '../../services/auth.service';
                   <label class="form-label fw-semibold small mb-1 text-dark">System Role</label>
                   <select class="form-select form-select-sm" [(ngModel)]="newEmployee.role" name="regRole" required>
                     <option value="EMPLOYEE">EMPLOYEE</option>
-                    <option value="ADMIN">ADMIN</option>
+                    <option value="SUPER_ADMIN">SUPER ADMIN (Department HOD)</option>
+                    <option value="ADMIN">ADMIN (Master Administrator)</option>
                   </select>
                 </div>
 
@@ -1014,6 +1036,109 @@ import { AuthService } from '../../services/auth.service';
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Re-attempt Authorization Comment Modal -->
+    <div class="modal fade show d-block bg-dark bg-opacity-50" tabIndex="-1" *ngIf="showReattemptModal" style="z-index: 1060;">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+          <div class="modal-header bg-warning text-dark py-3 px-4 rounded-top-4">
+            <h5 class="modal-title fw-bold fs-6 d-flex align-items-center gap-2">
+              <i class="bi bi-arrow-repeat fs-5"></i>
+              Authorize Exam Re-attempt (+1 Attempt)
+            </h5>
+            <button type="button" class="btn-close" (click)="closeReattemptModal()"></button>
+          </div>
+          <div class="modal-body p-4">
+            <!-- Target Employees summary -->
+            <div class="mb-3 p-3 bg-light rounded-3 border">
+              <small class="text-muted text-uppercase fw-bold d-block mb-1" style="font-size: 0.75rem;">Selected Employee(s):</small>
+              <div class="d-flex flex-wrap gap-1.5" style="max-height: 110px; overflow-y: auto;">
+                <span class="badge bg-white text-dark border px-2.5 py-1.5 font-monospace" *ngFor="let emp of reattemptTargetEmps">
+                  <strong>{{ emp.employeeId }}</strong> - {{ emp.name }} ({{ emp.department }})
+                </span>
+              </div>
+            </div>
+
+            <div *ngIf="reattemptModalErr" class="alert alert-danger py-2 px-3 small rounded-3 mb-3 d-flex align-items-center gap-2">
+              <i class="bi bi-exclamation-triangle-fill text-danger fs-6"></i>
+              <span>{{ reattemptModalErr }}</span>
+            </div>
+
+            <!-- Mandatory Reason Textarea -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold text-dark small mb-1">
+                Reason / Comment for Granting Re-attempt <span class="text-danger">*</span>
+              </label>
+              <textarea
+                class="form-control form-control-sm"
+                rows="3"
+                placeholder="Enter mandatory reason explaining why re-attempt is authorized (e.g. Technical glitch, power outage, browser interruption)..."
+                [(ngModel)]="reattemptComment"
+              ></textarea>
+              <small class="text-muted fs-7">
+                <i class="bi bi-info-circle me-1"></i> A mandatory remark must be logged for audit and department records.
+              </small>
+            </div>
+
+            <!-- Quick Comment Preset Chips -->
+            <div class="mb-3">
+              <small class="text-muted d-block mb-1 fw-semibold" style="font-size: 0.75rem;">Quick Reason Presets:</small>
+              <div class="d-flex flex-wrap gap-1">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm py-0.5 px-2 rounded-pill"
+                  style="font-size: 0.75rem;"
+                  (click)="setQuickReason('Technical disconnection / network drop during assessment')"
+                >
+                  Network Drop
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm py-0.5 px-2 rounded-pill"
+                  style="font-size: 0.75rem;"
+                  (click)="setQuickReason('Browser crash / power interruption during test session')"
+                >
+                  Power / Browser Crash
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm py-0.5 px-2 rounded-pill"
+                  style="font-size: 0.75rem;"
+                  (click)="setQuickReason('Accidental submission / system freeze reported')"
+                >
+                  System Freeze
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm py-0.5 px-2 rounded-pill"
+                  style="font-size: 0.75rem;"
+                  (click)="setQuickReason('Authorized by Department HOD for verified medical/emergency leave')"
+                >
+                  HOD Approval
+                </button>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+              <button type="button" class="btn btn-outline-secondary btn-sm px-3 fw-semibold" (click)="closeReattemptModal()">
+                Cancel
+              </button>
+              <button
+                type="button"
+                class="btn btn-warning btn-sm px-4 fw-bold shadow-xs text-dark d-flex align-items-center gap-1"
+                [disabled]="isSubmittingReattempt || !reattemptComment.trim()"
+                (click)="confirmGrantReattempt()"
+              >
+                <span *ngIf="isSubmittingReattempt" class="spinner-border spinner-border-sm me-1"></span>
+                <i *ngIf="!isSubmittingReattempt" class="bi bi-check2-circle me-1"></i>
+                <span>{{ isSubmittingReattempt ? 'Authorizing...' : 'Authorize Re-attempt' }}</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1075,8 +1200,31 @@ export class AdminDashboardComponent implements OnInit {
   examAccessErrMsg = '';
   copiedEmpId: string | null = null;
 
+  // Re-attempt Comment Modal State
+  showReattemptModal = false;
+  reattemptComment = '';
+  reattemptModalErr = '';
+  isSubmittingReattempt = false;
+  reattemptTargetEmps: any[] = [];
+
+  get isFullAdmin(): boolean {
+    return this.authService.isFullAdmin();
+  }
+
+  get isSuperAdminOrHod(): boolean {
+    return this.authService.isSuperAdminOrHod();
+  }
+
+  get hodDepartment(): string {
+    return this.stats?.hodDepartment || this.authService.getStoredEmployee()?.department || 'I&C';
+  }
+
   get filteredDeptStats(): any[] {
     if (!this.stats?.deptStats) return [];
+    if (this.isSuperAdminOrHod) {
+      const hodDept = (this.hodDepartment || '').toUpperCase();
+      return this.stats.deptStats.filter((d: any) => d.department.toUpperCase() === hodDept);
+    }
     return this.stats.deptStats.filter((d: any) => {
       const term = this.deptSearchTerm.toLowerCase().trim();
       const matchesSearch = !term || d.department.toLowerCase().includes(term);
@@ -1192,6 +1340,13 @@ export class AdminDashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    if (this.isSuperAdminOrHod) {
+      if (this.activeTab === 'user-management') {
+        this.activeTab = 'template-upload';
+      }
+      this.selectedDepartment = this.hodDepartment;
+      this.examAccessDeptFilter = this.hodDepartment;
+    }
     this.refreshDashboardData();
   }
 
@@ -1203,6 +1358,10 @@ export class AdminDashboardComponent implements OnInit {
       next: (res) => {
         this.stats = res;
         this.isDataLoading = false;
+        if (this.isSuperAdminOrHod && res?.hodDepartment) {
+          this.selectedDepartment = res.hodDepartment;
+          this.examAccessDeptFilter = res.hodDepartment;
+        }
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -1232,7 +1391,7 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   openUploadModal(dept: string): void {
-    this.selectedDepartment = dept;
+    this.selectedDepartment = this.isSuperAdminOrHod ? this.hodDepartment : dept;
     this.selectedFile = null;
     this.uploadSuccessMsg = '';
     this.uploadErrMsg = '';
@@ -1576,23 +1735,66 @@ export class AdminDashboardComponent implements OnInit {
     });
   }
 
-  grantReattemptForSelected(): void {
-    if (this.selectedEmpIds.size === 0) return;
-    const ids = Array.from(this.selectedEmpIds);
-    this.isExamAccessAction = true;
-    this.examAccessSuccessMsg = '';
-    this.examAccessErrMsg = '';
+  // Modal-based Grant Re-attempt Handlers (Mandatory Reason Enforced)
+  openGrantReattemptModal(emp: any): void {
+    this.reattemptTargetEmps = [emp];
+    this.reattemptComment = '';
+    this.reattemptModalErr = '';
+    this.showReattemptModal = true;
+    this.cdr.detectChanges();
+  }
 
-    this.adminService.grantReattempt(ids, undefined).subscribe({
+  openBulkGrantReattemptModal(): void {
+    if (this.selectedEmpIds.size === 0) return;
+    const targets = this.examAccessList.filter((e: any) => this.selectedEmpIds.has(e.employeeId));
+    this.reattemptTargetEmps = targets;
+    this.reattemptComment = '';
+    this.reattemptModalErr = '';
+    this.showReattemptModal = true;
+    this.cdr.detectChanges();
+  }
+
+  closeReattemptModal(): void {
+    this.showReattemptModal = false;
+    this.reattemptComment = '';
+    this.reattemptModalErr = '';
+    this.reattemptTargetEmps = [];
+    this.cdr.detectChanges();
+  }
+
+  setQuickReason(reason: string): void {
+    this.reattemptComment = reason;
+    this.cdr.detectChanges();
+  }
+
+  confirmGrantReattempt(): void {
+    const trimmed = (this.reattemptComment || '').trim();
+    if (!trimmed) {
+      this.reattemptModalErr = 'A comment / reason is mandatory to authorize a re-attempt.';
+      return;
+    }
+    if (this.reattemptTargetEmps.length === 0) {
+      this.reattemptModalErr = 'No employees selected for re-attempt authorization.';
+      return;
+    }
+
+    const ids = this.reattemptTargetEmps.map((e) => e.employeeId);
+    this.isSubmittingReattempt = true;
+    this.reattemptModalErr = '';
+
+    this.adminService.grantReattempt(ids, trimmed).subscribe({
       next: (res) => {
-        this.examAccessSuccessMsg = res.message || `Re-attempt permission granted for ${ids.length} employee(s)!`;
+        this.isSubmittingReattempt = false;
+        this.showReattemptModal = false;
+        this.examAccessSuccessMsg = res.message || `Re-attempt authorized for ${ids.length} employee(s)!`;
         this.selectedEmpIds.clear();
-        this.isExamAccessAction = false;
+        this.reattemptTargetEmps = [];
+        this.reattemptComment = '';
         this.loadExamAccessList();
       },
       error: (err) => {
-        this.examAccessErrMsg = err.error?.message || 'Failed to grant re-attempt.';
-        this.isExamAccessAction = false;
+        this.isSubmittingReattempt = false;
+        this.reattemptModalErr = err.error?.message || 'Failed to authorize re-attempt.';
         this.cdr.detectChanges();
       },
     });
@@ -1635,21 +1837,6 @@ export class AdminDashboardComponent implements OnInit {
     });
   }
 
-  grantReattemptSingle(emp: any): void {
-    this.examAccessSuccessMsg = '';
-    this.examAccessErrMsg = '';
-    this.adminService.grantReattempt(emp.employeeId).subscribe({
-      next: (res) => {
-        this.examAccessSuccessMsg = `Permission granted! ${emp.name} (${emp.employeeId}) can now take 1 more attempt.`;
-        this.loadExamAccessList();
-      },
-      error: (err) => {
-        this.examAccessErrMsg = err.error?.message || 'Failed to grant re-attempt.';
-        this.cdr.detectChanges();
-      },
-    });
-  }
-
   revokeExamLinkSingle(emp: any): void {
     this.examAccessSuccessMsg = '';
     this.examAccessErrMsg = '';
@@ -1663,22 +1850,5 @@ export class AdminDashboardComponent implements OnInit {
         this.cdr.detectChanges();
       },
     });
-  }
-
-  copyDirectExamLink(emp: any): void {
-    const origin = window.location.origin;
-    const directLink = `${origin}/login?empId=${emp.employeeId}`;
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(directLink).then(() => {
-        this.copiedEmpId = emp.employeeId;
-        this.cdr.detectChanges();
-        setTimeout(() => {
-          if (this.copiedEmpId === emp.employeeId) {
-            this.copiedEmpId = null;
-            this.cdr.detectChanges();
-          }
-        }, 3000);
-      });
-    }
   }
 }

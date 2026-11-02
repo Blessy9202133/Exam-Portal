@@ -21,7 +21,7 @@ export interface Employee {
   email: string;
   department: string;
   level: string;
-  role: 'EMPLOYEE' | 'ADMIN';
+  role: 'EMPLOYEE' | 'ADMIN' | 'SUPER_ADMIN' | 'HOD';
   examAccess?: ExamAccessInfo;
 }
 
@@ -50,6 +50,14 @@ export class AuthService {
         this.currentEmployeeSubject.next(res.employee);
       })
     );
+  }
+
+  forgotPassword(identifier: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/forgot-password`, { identifier });
+  }
+
+  resetPassword(payload: { token: string; newPassword: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/reset-password`, payload);
   }
 
   refreshProfile(): Observable<Employee> {
@@ -99,6 +107,16 @@ export class AuthService {
   }
 
   isAdmin(): boolean {
+    const emp = this.getStoredEmployee();
+    return emp?.role === 'ADMIN' || emp?.role === 'SUPER_ADMIN' || emp?.role === 'HOD';
+  }
+
+  isSuperAdminOrHod(): boolean {
+    const emp = this.getStoredEmployee();
+    return emp?.role === 'SUPER_ADMIN' || emp?.role === 'HOD';
+  }
+
+  isFullAdmin(): boolean {
     const emp = this.getStoredEmployee();
     return emp?.role === 'ADMIN';
   }

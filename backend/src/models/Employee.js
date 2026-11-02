@@ -48,7 +48,7 @@ const employeeSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['EMPLOYEE', 'ADMIN'],
+      enum: ['EMPLOYEE', 'ADMIN', 'SUPER_ADMIN', 'HOD'],
       default: 'EMPLOYEE',
     },
     designation: {
@@ -58,6 +58,14 @@ const employeeSchema = new mongoose.Schema(
     mobilePhone: {
       type: String,
       trim: true,
+    },
+    resetPasswordToken: {
+      type: String,
+      default: null,
+    },
+    resetPasswordExpires: {
+      type: Date,
+      default: null,
     },
     examAccess: {
       isLinkActive: {
@@ -92,6 +100,14 @@ const employeeSchema = new mongoose.Schema(
       adminRemark: {
         type: String,
         default: '',
+      },
+      reattemptReason: {
+        type: String,
+        default: '',
+      },
+      lastReattemptGrantedAt: {
+        type: Date,
+        default: null,
       },
     },
   },
