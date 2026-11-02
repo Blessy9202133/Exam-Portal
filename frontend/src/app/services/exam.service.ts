@@ -55,7 +55,7 @@ export interface ExamResultResponse {
 })
 export class ExamService {
   
-  public apiUrl: string = `${(window as any).runtimeConfig?.apiUrl || '/api'}/admin`;
+  public apiUrl: string = `${(window as any).runtimeConfig?.apiUrl || '/api'}/exam`;
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
